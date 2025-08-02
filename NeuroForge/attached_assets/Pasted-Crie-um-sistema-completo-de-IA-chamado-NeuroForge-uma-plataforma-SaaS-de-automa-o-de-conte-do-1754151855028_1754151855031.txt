@@ -1,0 +1,62 @@
+Crie um sistema completo de IA chamado **NeuroForge** — uma plataforma SaaS de automação de conteúdo com foco em vídeos para TikTok e campanhas virais.
+
+🧠 Funcionalidade:
+- Campo de busca estilo Google no centro da tela
+- Botões dinâmicos em formato de balões: "Criar VSL Profissional", "Vídeo para TikTok", "Roteiro Viral", "Planejamento Semanal", "Ideia de Produto Validado", etc
+- Ao digitar um prompt ou clicar num balão, o sistema deve:
+  1. Analisar o prompt com **Gemini**
+  2. Gerar roteiro com **Claude (via OpenRouter)**
+  3. Gerar vídeo com **MiniMax**
+  4. Transcrever ou gerar voz com **Whisper**
+  5. Armazenar tudo no **Cloudinary**
+  6. Salvar histórico no **Supabase**
+
+🔐 Login:
+- Sistema de autenticação via email (com Supabase)
+- Cada usuário tem seu histórico e projetos separados
+
+💾 Banco de dados (via Supabase):
+- Tabela `usuarios`: id, email, data_criacao
+- Tabela `projetos`: id, user_id, tipo, prompt, status, link_video, link_roteiro, link_audio, data
+
+🌐 Webdesign:
+- Interface estilo Google
+- Fundo com partículas animadas e orbes flutuando
+- Efeitos de blur (glassmorphism)
+- Layout responsivo com TailwindCSS
+- Hover interativo nos botões (brilho, expansão, animação leve)
+
+⚙️ Backend (Express.js):
+- Endpoint POST `/api/processar` → recebe prompt, executa as etapas com as IAs, salva no Supabase, e retorna links
+- Endpoint GET `/api/status/:id` → mostra status (em processamento, finalizado)
+- Endpoint GET `/api/projetos/:user_id` → histórico do usuário
+
+🔌 Integrações com APIs (use placeholders com variáveis .env):
+- `SUPABASE_URL=https://xyz.supabase.co`
+- `SUPABASE_KEY=sb_secret_cHpklBxCa5ZMZagOyJz--w_EiXv_1sP`
+- `CLOUDINARY_URL=cloudinary://199561984175375:Pi76r7-RaTer1bKp7v9LJUJd224@dzpaatoqa`
+- `GEMINI_API_KEY=xxx`
+- `OPENROUTER_API_KEY=xxx`
+- `MINIMAX_API_KEY=xxx`
+- `WHISPER_ENDPOINT=https://api.whisper.ai/transcribe`
+
+🛠️ Frontend:
+- Framework: React + TailwindCSS
+- Use componentes modernos (Radix ou Shadcn se possível)
+- Modal para status da IA com loading step-by-step
+- Player de vídeo, textarea com roteiro e botão "Copiar"
+
+💬 Fluxo de uso:
+1. Usuário faz login
+2. Digita prompt ou clica em sugestão
+3. IA executa etapas (análise → roteiro → vídeo → voz)
+4. Resultado é exibido: vídeo, texto, áudio
+5. Pode baixar, copiar, ou ver histórico
+
+📦 Estrutura de pastas:
+- `/frontend`: React App
+- `/backend`: Node/Express API
+- `.env`: variáveis com as chaves fornecidas
+
+Crie esse projeto completo com base nesse briefing. Ele deve funcionar sem dependência de plataforma paga, usando APIs públicas com chaves. Use mock caso alguma API falhe para manter experiência fluida.
+

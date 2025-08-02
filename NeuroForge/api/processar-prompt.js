@@ -1,0 +1,102 @@
+class Person {
+  constructor(name, job) {
+    this.name = name;
+    this.job = job;
+    
+  }
+
+  print() {
+    const { name, job } = this;
+    console.log(`${name}, ${job}`);
+  }
+}
+
+const thatGuy = new Person('John Doe', 'Software Engineer');
+thatGuy.print();
+import axios from "axios";
+
+export default async function handler(req, res) {
+  const { prompt, user_id } = req.body;
+
+  try {
+    // 1. Validação com Gemini
+    const geminiRes = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      {
+        contents: [{ parts: [{ text: `Essa ideia é boa para viralizar? ${prompt}` }] }]
+      }
+    );
+    const validacao = geminiRes.data.candidates[0]?.content?.parts[0]?.text || "Aprovado";
+
+    if (!validacao.includes("Aprovado")) {
+      return res.status(400).json({ status: "fail", motivo: validacao });
+    }
+
+    // 2. Geração do roteiro com OpenAI (substitua se usar Claude)
+    const roteiro = await axios.post(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        model: "gpt-4",
+        messages: [{ role: "user", content: `Crie um roteiro para vídeo TikTok com base nessa ideia: ${prompt}` }],
+        temperature: 0.7
+      },
+      {
+        headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` }
+      }
+    );
+
+    const roteiroTexto = roteiro.data.choices[0].message.content;
+
+    // 3. Gerar imagem com Leonardo ou EdenAI (exemplo com Eden)
+    const imagem = await axios.post(
+      "https://api.edenai.run/v2/image/generation",
+      {
+        providers: ["replicate"],
+        text: prompt,
+        resolution: "512x512",
+        fallback_providers: []
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.EDENAI_API_KEY}`,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    const imagemURL = imagem.data.replicate.items[0]?.image_resource_url;
+
+    // 4. Gerar vídeo com Creatomate
+    const video = await axios.post(
+      "https://api.creatomate.com/v1/renders",
+      {
+        template_id: "tiktok-template-id", // você precisa criar um template no Creatomate
+        modifications: {
+          "Texto": roteiroTexto,
+          "Imagem": imagemURL
+        }
+      },
+      {
+        auth: {
+          username: process.env.CREATOMATE_API_KEY,
+          password: ""
+        }
+      }
+    );
+
+    const videoURL = video.data.download_url;
+
+    // 5. Salvar no Supabase (opcional, se já tiver o projeto feito)
+    // await supabase.from("projetos").insert({ user_id, prompt, roteiro: roteiroTexto, video: videoURL });
+
+    return res.status(200).json({
+      status: "ok",
+      roteiro: roteiroTexto,
+      imagem: imagemURL,
+      video: videoURL
+    });
+  } catch (err) {
+    console.error(err.response?.data || err.message);
+    return res.status(500).json({ status: "erro", mensagem: err.message });
+  }
+}
